@@ -124,26 +124,27 @@ print('Eq2: ', Eq2)
 print('-------------------------')
 print('Calculate Mass matrix (M), Coriolis and gravity terms (C and  G):')
 G = zeros(2,1) 
-G[0,0] = 0 # Eq1.subs([]).simplify()
-G[1,0] = 0
+G[0,0] = Eq1.subs([(ddq1, 0), (ddq2, 0), (dq1, 0), (dq2, 0)]) # Eq1.subs([]).simplify()
+G[1,0] = Eq2.subs([(ddq1, 0), (ddq2, 0), (dq1, 0), (dq2, 0)]) # 使用 GPT 生成，待验证，似乎正确
 print('-------------------------\nG:\n',G)
 
 M = zeros(2,2) 
-M[0,0] = 0
-M[0,1] = 0
-M[1,0] = 0
-M[1,1] = 0
+M[0,0] = expand(Eq1).coeff(ddq1) # 使用 GPT 生成
+M[0,1] = expand(Eq1).coeff(ddq2) # 使用 GPT 生成
+M[1,0] = expand(Eq2).coeff(ddq1) # 使用 GPT 生成
+M[1,1] = expand(Eq2).coeff(ddq2) # 使用 GPT 生成
 M = simplify(M)
 print('-------------------------\nM:\n', M)
 
 C = zeros(2,2) 
-C[0,0] = 0
-C[0,1] = 0
-C[1,0] = 0
-C[1,1] = 0
+C[0,0] = expand(Eq1.subs([(ddq1, 0), (ddq2, 0)])).coeff(dq1) # 去除ddq1和ddq2项，然后提取dq1的系数
+C[0,1] = expand(Eq1.subs([(ddq1, 0), (ddq2, 0)])).coeff(dq2)
+C[1,0] = expand(Eq2.subs([(ddq1, 0), (ddq2, 0)])).coeff(dq1)
+C[1,1] = expand(Eq2.subs([(ddq1, 0), (ddq2, 0)])).coeff(dq2)
 C = simplify(C)
 print('-------------------------\nC:\n', C)
 print('-------------------------')
+
 
 # create M, C, G functions to evaluate at certain points
 eval_M = lambdify((l1,l2,m1,m2,q1,q2),M)
