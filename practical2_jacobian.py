@@ -78,11 +78,13 @@ for _ in range(NUM_STEPS):
 
     # Calculate torque (Cartesian PD, and/or desired force)
     tau = np.zeros(2) # [TODO]
-    tau = J.T @ np.array([0,0])
+    foot_pos_err = des_foot_pos - foot_pos
+    desired_force = kpCartesian @ foot_pos_err - kdCartesian @ foot_vel
+    tau = J.T @ desired_force # 这里需要使用 PD 控制器计算力
     
     # add gravity compensation (Force), (get mass with env.robot.total_mass)
     # [TODO]
-    tau = tau + np.array([0, env.robot.total_mass*9.81])
+    tau = tau + J.T @ np.array([0, -env.robot.total_mass*9.81])
 
     action = tau
     # apply control, simulate
