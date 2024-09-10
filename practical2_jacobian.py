@@ -63,23 +63,25 @@ kpCartesian = np.diag([500]*2)
 kdCartesian = np.diag([30]*2)
 
 # test different desired foot positions
-des_foot_pos = np.array([0.05,-0.3]) 
+des_foot_pos = np.array([0.05,-0.3])  # 相对角度 theta1 = 2.86度  theta2 = -17.1度
 
 for _ in range(NUM_STEPS):
     # Compute jacobian and foot_pos in leg frame (use GetMotorAngles() )
     motor_ang = env.robot.GetMotorAngles()
     J, foot_pos = np.zeros((2,2)), np.zeros(2) # [TODO]
-    J, foot_pos = jacobian_rel(motor_ang) ### 测试 相对角度
+    J, foot_pos = jacobian_rel(motor_ang) ################################ 测试 相对角度
 
     # Get foot velocity in leg frame (use GetMotorVelocities() )
     motor_vel = env.robot.GetMotorVelocities()
     foot_vel = np.zeros(2) # [TODO]
-    foot_vel = J @ motor_vel ### 测试 相对角度 计算速度
+    foot_vel = J @ motor_vel ######################################### 测试 相对角度 计算速度
 
     # Calculate torque (Cartesian PD, and/or desired force)
     tau = np.zeros(2) # [TODO]
-    foot_pos_err = des_foot_pos - foot_pos
-    desired_force = kpCartesian @ foot_pos_err - kdCartesian @ foot_vel
+    foot_pos_err = des_foot_pos - foot_pos ########################################## 测试 相对角度 计算位置误差
+    desired_force = kpCartesian @ foot_pos_err                           # 会振荡
+    # desired_force = kpCartesian @ foot_pos_err  - kdCartesian @ foot_vel # 不会振荡
+    print('desired_force',desired_force)
     tau = J.T @ desired_force # 这里需要使用 PD 控制器计算力
     
     # add gravity compensation (Force), (get mass with env.robot.total_mass)

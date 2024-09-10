@@ -35,14 +35,16 @@ if SINGLE_JUMP:
 
 # design Z force trajectory as a funtion of Fz_max, f, t
 #   Hint: use a sine function (but don't forget to remove positive forces)
-force_traj_z = np.zeros(len(t))
+force_traj_z = np.zeros(len(t)) # [TODO] ####################################################################
+force_traj_z = Fz_max * np.sin(2*np.pi*f*t)
 
 if SINGLE_JUMP:
     # remove rest of profile (just keep the first peak)
     force_traj_z = np.zeros(len(t))
 
 # design X force trajectory as a funtion of Fx_max, f, t
-force_traj_x = np.zeros(len(t))
+force_traj_x = np.zeros(len(t)) # [TODO] ####################################################################
+force_traj_x = Fx_max * np.sin(2*np.pi*f*t)
 
 # sample nominal foot position (can change or optimize)
 nominal_foot_pos = np.array([0.0,-0.2]) 
@@ -59,7 +61,10 @@ for i in range(NUM_SECONDS*1000):
     J, ee_pos_legFrame = jacobian_rel(env.robot.GetMotorAngles())
 
     # Add Cartesian PD (and/or joint PD? Think carefully about this, and try it out.)
-    tau += np.zeros(2) # [TODO]
+    tau += np.zeros(2) # [TODO] ####################################################################
+    ee_pos_err = nominal_foot_pos - ee_pos_legFrame
+    desired_force = kpCartesian @ ee_pos_err - kdCartesian @ J @ env.robot.GetMotorVelocities()
+    # tau += J.T @ desired_force
 
     # Add force profile contribution
     tau += J.T @ np.array([force_traj_x[i], force_traj_z[i]])
@@ -75,3 +80,11 @@ for i in range(NUM_SECONDS*1000):
 print('Peak z', max_base_z)
 
 # [TODO] make some plots to verify your force profile and system states
+# plt.figure()
+# plt.plot(t, force_traj_z, label='Z Force Trajectory')
+# plt.plot(t, force_traj_x, label='X Force Trajectory')
+# plt.xlabel('Time (s)')
+# plt.ylabel('Force (N)')
+# plt.legend()
+# plt.title('Force Profile')
+# plt.show()
