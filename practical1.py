@@ -24,10 +24,10 @@ l1, l2, m1, m2, g = symbols('l1 l2 m1 m2 g')
 # Position and velocity of m1
 print('-------------------------')
 print('Position and velocity of m1:')
-x1 = 0
-y1 = 0
-dx1 = 0
-dy1 = 0
+x1 =  l1*sin(q1)      #0
+y1 = -l1*cos(q1)      #0
+dx1 = l1*cos(q1)*dq1  #0
+dy1 = l1*sin(q1)*dq1  #0
 
 print('x1:  ', x1)
 print('y1:  ', y1)
@@ -37,10 +37,10 @@ print('dy1: ', dy1)
 # Position and velocity of m2
 print('-------------------------')
 print('Position and velocity of m2:')
-x2 = 0
-y2 = 0
-dx2 = 0
-dy2 = 0
+x2 = x1 + l2*sin(q2)      #0
+y2 = y1 - l2*cos(q2)      #0
+dx2 = dx1 + l2*cos(q2)*dq2 #0
+dy2 = dy1 + l2*sin(q2)*dq2 #0
 
 print('x2:  ', x2)
 print('y2:  ', y2)
@@ -51,8 +51,8 @@ print('dy2: ', dy2)
 # Kinetic and potential energies of m1 
 print('-------------------------')
 print('Kinetic and potential energies of m1:')
-T1 = 0
-V1 = 0
+T1 = 1/2*m1*(dx1**2+dy1**2)  #0
+V1 = m1*g*y1                 #0
 T1 = simplify(T1)
 V1 = simplify(V1)
 
@@ -62,8 +62,8 @@ print('V1: ', V1)
 # Kinetic and potential energies of m2
 print('-------------------------')
 print('Kinetic and potential energies of m2:')
-T2 = 0
-V2 = 0
+T2 = 1/2*m2*(dx2**2+dy2**2) #0
+V2 = m2*g*y2                #0
 T2 = simplify(T2) 
 V2 = simplify(V2)
 
@@ -79,11 +79,11 @@ print('V2: ', V2)
 """
 print('-------------------------')
 print('Calculate the Lagrangian of the system: ')
-T = 0
+T = T1 + T2 #0
 T = simplify(T)
-V = 0
+V = V1 + V2 #0
 V = simplify(V)
-L = 0
+L = T - V   #0
 
 print('L: ', L)
 
@@ -93,27 +93,26 @@ for $\frac{\partial L}{\partial q}$.
 """
 print('-------------------------')
 print('Calculate the partial derivatives of Lagrangian:')
-dLddq1 = 0
-dLddq2 = 0
-dLdq1  = 0
-dLdq2  = 0
-dLddq1 = 0
-dLddq2 = 0
-dLdq1  = 0
-dLdq2  = 0
+dLddq1 = diff(L,dq1) #0 计算拉格朗日
+dLddq2 = diff(L,dq2) #0
+dLdq1  = diff(L,q1) #0
+dLdq2  = diff(L,q2) #0
+dLddq1 = simplify(dLddq1)
+dLddq2 = simplify(dLddq2)
+dLdq1  = simplify(dLdq1)
+dLdq2  = simplify(dLdq2)
 
 """
 We use dLddq_dt for $\frac{d}{dt}(\frac{\partial L}{\partial \dot q})$
 """
 print('-------------------------')
-dLddq1_dt = 0
-
-dLddq2_dt = 0
+dLddq1_dt = diff(dLddq1, q1)*dq1 + diff(dLddq1, dq1)*ddq1 + diff(dLddq1, q2)*dq2 + diff(dLddq1, dq2)*ddq2 #0 由 Copilot 生成，待验证
+dLddq2_dt = diff(dLddq2, q1)*dq1 + diff(dLddq2, dq1)*ddq1 + diff(dLddq2, q2)*dq2 + diff(dLddq2, dq2)*ddq2 #0 由 Copilot 生成，待验证
 
 
 print('Calculate equations of motion: ')
-Eq1 = 0
-Eq2 = 0
+Eq1 = dLddq1_dt - dLdq1 #0
+Eq2 = dLddq2_dt - dLdq2 #0
 Eq1 = simplify(Eq1)
 Eq2 = simplify(Eq2)
 
