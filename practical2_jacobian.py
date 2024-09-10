@@ -10,16 +10,16 @@ def jacobian_abs(q,l1=0.209,l2=0.195):
     # Jacobian
     J = np.zeros((2,2))
     # [TODO]
-    # J[0, 0] = 
-    # J[1, 0] = 
-    # J[0, 1] =
-    # J[1, 1] = 
+    J[0, 0] = l1*np.cos(q[0]) ###
+    J[1, 0] = l1*np.sin(q[0]) ###
+    J[0, 1] = l2*np.cos(q[1]) ###
+    J[1, 1] = l2*np.sin(q[1]) ###
 
     # foot pos
     pos = np.zeros(2)
     # [TODO]
-    # pos[0] = 
-    # pos[1] = 
+    pos[0] =  l1*np.sin(q[0]) + l2*np.sin(q[1]) ###
+    pos[1] = -l1*np.cos(q[0]) - l2*np.cos(q[1]) ###
 
     return J, pos
 
@@ -31,16 +31,16 @@ def jacobian_rel(q,l1=0.209,l2=0.195):
     # Jacobian
     J = np.zeros((2,2))
     # [TODO]
-    # J[0, 0] = 
-    # J[1, 0] = 
-    # J[0, 1] =
-    # J[1, 1] = 
+    J[0, 0] = -l1*np.cos(q[0])-l2*np.cos(q[0]+q[1]) ###
+    J[1, 0] = +l1*np.sin(q[0])+l2*np.sin(q[0]+q[1]) ###
+    J[0, 1] = -l2*np.cos(q[0]+q[1]) ###
+    J[1, 1] = +l2*np.sin(q[0]+q[1]) ###
 
     # foot pos
     pos = np.zeros(2)
     # [TODO]
-    # pos[0] = 
-    # pos[1] = 
+    pos[0] = -l1*np.sin(q[0])-l2*np.sin(q[0]+q[1]) ###
+    pos[1] = -l1*np.cos(q[0])-l2*np.cos(q[0]+q[1]) ###
 
     return J, pos
 
@@ -69,16 +69,20 @@ for _ in range(NUM_STEPS):
     # Compute jacobian and foot_pos in leg frame (use GetMotorAngles() )
     motor_ang = env.robot.GetMotorAngles()
     J, foot_pos = np.zeros((2,2)), np.zeros(2) # [TODO]
+    J, foot_pos = jacobian_rel(motor_ang) ### 测试 相对角度
 
     # Get foot velocity in leg frame (use GetMotorVelocities() )
     motor_vel = env.robot.GetMotorVelocities()
     foot_vel = np.zeros(2) # [TODO]
+    foot_vel = J @ motor_vel ### 测试 相对角度 计算速度
 
     # Calculate torque (Cartesian PD, and/or desired force)
     tau = np.zeros(2) # [TODO]
+    tau = J.T @ np.array([0,0])
     
     # add gravity compensation (Force), (get mass with env.robot.total_mass)
     # [TODO]
+    tau = tau + np.array([0, env.robot.total_mass*9.81])
 
     action = tau
     # apply control, simulate
