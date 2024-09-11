@@ -79,8 +79,8 @@ for _ in range(NUM_STEPS):
     # Calculate torque (Cartesian PD, and/or desired force)
     tau = np.zeros(2) # [TODO]
     foot_pos_err = des_foot_pos - foot_pos ########################################## 测试 相对角度 计算位置误差
-    # desired_force = kpCartesian @ foot_pos_err                           # 会振荡
-    desired_force = kpCartesian @ foot_pos_err  - kdCartesian @ foot_vel # 不会振荡
+    desired_force = kpCartesian @ foot_pos_err                           # 会振荡
+    # desired_force = kpCartesian @ foot_pos_err  - kdCartesian @ foot_vel # 不会振荡
     print('desired_force',desired_force)
     tau = J.T @ desired_force # 这里需要使用 PD 控制器计算力
     
