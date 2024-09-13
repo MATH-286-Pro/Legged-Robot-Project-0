@@ -31,7 +31,7 @@ env = LegGymEnv(render=True,
                 on_rack=False,    # set True to debug 
                 motor_control_mode='TORQUE',
                 action_repeat=1,
-                record_video=True
+                # record_video=True # 设置录像
                 )
 
 ### 更改测试时间
