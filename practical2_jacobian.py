@@ -52,12 +52,12 @@ if __name__ == "__main__":
     # 1.不渲染
     # 2.机器人落地
     env = LegGymEnv(render=True,    # set True to render with pyglet
-                    on_rack=False,    # set True to hang up robot in air 
+                    on_rack=True,    # set True to hang up robot in air 
                     motor_control_mode='TORQUE',
                     action_repeat=1,
                     )
 
-    NUM_STEPS = 5*1000 # simulate 5 seconds (sim dt is 0.001)
+    NUM_SECONDS = 5  # simulate 5 seconds (sim dt is 0.001)
 
     env._robot_config.INIT_MOTOR_ANGLES = np.array([-np.pi/4 , np.pi/2]) # test different initial motor angles
     obs = env.reset() # reset environment if changing initial configuration 
@@ -73,8 +73,14 @@ if __name__ == "__main__":
 
     ### 初始化数据列表用于保存每一步的 foot_pos_err
     foot_pos_err_list = []
+    foot_pos_data     = []
 
-    for _ in range(NUM_STEPS):
+    t = np.linspace(0,NUM_SECONDS,NUM_SECONDS*1000 + 1)
+    foot_traj_x = np.sin(2*np.pi*0.5*t)*0.1
+    foot_traj_z = np.cos(2*np.pi*0.5*t)*0.1-0.2
+    foot_traj = np.vstack((foot_traj_x,foot_traj_z)).T
+
+    for i in range(NUM_SECONDS*1000):
         # Compute jacobian and foot_pos in leg frame (use GetMotorAngles() )
         motor_ang = env.robot.GetMotorAngles()
         J, foot_pos = jacobian_rel(motor_ang) # [TODO]
@@ -84,7 +90,8 @@ if __name__ == "__main__":
         foot_vel = J @ motor_vel  # [TODO]
 
         # Calculate torque (Cartesian PD, and/or desired force)
-        foot_pos_err = des_foot_pos - foot_pos
+        # foot_pos_err = des_foot_pos - foot_pos ### 原始
+        foot_pos_err = foot_traj[i] - foot_pos ### 测试轨迹
         # desired_force = kpCartesian @ foot_pos_err                           # 会振荡
         desired_force = kpCartesian @ foot_pos_err  - kdCartesian @ foot_vel  # 不会振荡
         tau = np.zeros(2) 
@@ -101,7 +108,8 @@ if __name__ == "__main__":
 
         # 更新 foot_pos_err 的值
         foot_pos_err_list.append(foot_pos_err)
+        foot_pos_data.append(foot_pos)
 
     # make plots of joint positions, foot positions, torques, etc.
     # [TODO]
-    tools.plot(foot_pos_err_list)
+    tools.plot(foot_pos_data)

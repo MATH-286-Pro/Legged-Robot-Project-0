@@ -21,7 +21,9 @@ if __name__ == "__main__":
     SINGLE_JUMP = True
 
     # sample Cartesian PD gains (can change or optimize)
-    kpCartesian = np.diag([500,300])
+    # kpCartesian = np.diag([500,300])
+    # kdCartesian = np.diag([30,20])
+    kpCartesian = np.diag([800,500])
     kdCartesian = np.diag([30,20])
 
     ### 初始化数据列表用于保存每一步的 foot_pos_err
