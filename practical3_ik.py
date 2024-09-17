@@ -1,7 +1,9 @@
 # Inverse Kinematics practical
 from env.leg_gym_env import LegGymEnv
 import numpy as np
+import matplotlib.pyplot as plt
 from practical2_jacobian import jacobian_rel
+import tools
 
 def angle_to_torque(angle_target,angle_current,J,vel_current,kp,kd):
 
@@ -67,9 +69,11 @@ def ik_numerical(q0,des_x,tol=1e-4):
     alpha = 0.5 # convergence factor
     lam = 0.001 # damping factor for pseudoInverse ### 说明需要使用 pseudoInverse 函数？
     joint_angles = q0
+    
+    ee_error = 1.0 ## 初始化误差
 
     # Condition to iterate: while fewer than max iterations, and while error is greater than tolerance
-    while( i < max_i and 0 ):
+    while( i < max_i and np.linalg.norm(ee_error) > tol ):
         # Evaluate Jacobian based on current joint angles
         J, ee = jacobian_rel(q0) ### [TODO]
 
@@ -77,61 +81,76 @@ def ik_numerical(q0,des_x,tol=1e-4):
         J_pinv = pseudoInverse(J,lam) ### [TODO]
 
         # Find end effector error vector
-        ee_error = 0
+        ee_error = des_x - ee
 
         # update joint_angles
-        joint_angles += 0
+        joint_angles += alpha * J_pinv @ ee_error
 
         # update iteration counter
         i += 1
 
     return joint_angles
 
+if __name__ == "__main__":
+    env = LegGymEnv(render=True, 
+                    on_rack=True,    # set True to debug 
+                    motor_control_mode='TORQUE',
+                    action_repeat=1,
+                    )
 
-env = LegGymEnv(render=True, 
-                on_rack=True,    # set True to debug 
-                motor_control_mode='TORQUE',
-                action_repeat=1,
-                )
+    NUM_STEPS = 5*1000   # simulate 5 seconds (sim dt is 0.001)
+    tau = np.zeros(2) # either torques or motor angles, depending on mode
 
-NUM_STEPS = 5*1000   # simulate 5 seconds (sim dt is 0.001)
-tau = np.zeros(2) # either torques or motor angles, depending on mode
+    ### 初始化数据列表用于保存每一步的 foot_pos_err
+    foot_value_list = []
 
-IK_mode = "GEOMETRICAL"
+    # IK_mode = "GEOMETRICAL"
+    IK_mode = "NUMERICAL"
 
-# sample joint PD gains
-# kpJoint = np.array([55,55])
-# kdJoint = np.array([0.8,0.8])
-kpJoint = np.diag([55,55])            ### 测试用
-kdJoint = np.diag([10.0,10.0])        ### 测试用
+    # sample joint PD gains
+    # kpJoint = np.array([55,55])
+    # kdJoint = np.array([0.8,0.8])
+    kpJoint = np.diag([55,55])            ### 测试用
+    kdJoint = np.diag([10.0,10.0])        ### 测试用
 
-# desired foot position (sample)
-des_foot_pos = np.array([0.1,-0.2])   ### 目标位置
+    # desired foot position (sample)
+    des_foot_pos = np.array([0.1,-0.2])   ### 目标位置
+    angle_initial = env.robot.GetMotorAngles() ### 获取初始角度
 
-for counter in range(NUM_STEPS):
-    # Compute inverse kinematics in leg frame 
-    if IK_mode == "GEOMETRICAL":
-        # geometrical
-        qdes         = ik_geometrical(des_foot_pos)    ### 计算目标角度 # 根据 Fusion 运算 几何法正确
-        angle_target = ik_geometrical(des_foot_pos)    ### 计算目标角度 # 根据 Fusion 运算 几何法正确
-    else:
-        # numerical
-        qdes = env._robot_config.INIT_MOTOR_ANGLES     # ik_numerical
-    
-    # print 
-    if counter % 500 == 0:
-        J, ee_pos_legFrame = jacobian_rel(env.robot.GetMotorAngles())
-        print('---------------', counter)
-        print('q ik',qdes,'q real',env.robot.GetMotorAngles()) ### 打印计算角度和实际角度
-        print('ee pos',ee_pos_legFrame)
+    for counter in range(NUM_STEPS):
+        # Compute inverse kinematics in leg frame 
+        if IK_mode == "GEOMETRICAL":
+            # geometrical
+            qdes         = ik_geometrical(des_foot_pos)    ### 计算目标角度 # 根据 Fusion 运算 几何法正确
+            angle_target = ik_geometrical(des_foot_pos)    ### 计算目标角度 # 根据 Fusion 运算 几何法正确
+        else:
+            # numerical
+            # qdes = env._robot_config.INIT_MOTOR_ANGLES     # ik_numerical
+            qdes         = ik_numerical(angle_initial,des_foot_pos)
+            angle_target = ik_numerical(angle_initial,des_foot_pos)   
 
-    # determine torque with joint PD
-    angle_current = env.robot.GetMotorAngles()          ### 获取当前角度
-    vel_current   = J @ env.robot.GetMotorVelocities()  ### 获取当前速度
+        
+        # print 
+        if counter % 500 == 0: ### 每 500 步打印一次
+            J, ee_pos_legFrame = jacobian_rel(env.robot.GetMotorAngles())
+            print('---------------', counter)
+            print('q ik',qdes,'q real',env.robot.GetMotorAngles()) ### 打印计算角度和实际角度
+            print('ee pos',ee_pos_legFrame)
 
-    tau = np.zeros(2)
-    tau += -angle_to_torque(angle_target,angle_current,J,vel_current,kpJoint,kdJoint) ### 计算力矩
-    tau += J.T @ np.array([0,-env.robot.total_mass*9.81])                             ### 重力补偿
+        # determine torque with joint PD
+        angle_current = env.robot.GetMotorAngles()          ### 获取当前角度
+        vel_current   = J @ env.robot.GetMotorVelocities()  ### 获取当前速度
+        pos_current   = jacobian_rel(angle_current)[1]      ### 获取当前位置 (测试用)
 
-    # apply control, simulate
-    env.step(tau)
+        tau = np.zeros(2)
+        tau += -angle_to_torque(angle_target,angle_current,J,vel_current,kpJoint,kdJoint) ### 计算力矩
+        # tau += J.T @ np.array([0,-env.robot.total_mass*9.81])                             ### 重力补偿
+
+        # apply control, simulate
+        env.step(tau)
+
+        ### 更新 foot_value_list
+        foot_value_list.append(pos_current)
+
+    tools.plot(foot_value_list)
+

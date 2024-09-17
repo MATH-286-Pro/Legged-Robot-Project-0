@@ -3,6 +3,7 @@ from env.leg_gym_env import LegGymEnv
 import numpy as np
 import matplotlib.pyplot as plt
 from practical2_jacobian import jacobian_rel
+import tools
 
 if __name__ == "__main__":
     env = LegGymEnv(render=True, 
@@ -13,11 +14,11 @@ if __name__ == "__main__":
                     )
 
     ### 更改测试时间
-    NUM_SECONDS = 10   # simulate N seconds (sim dt is 0.001)
+    NUM_SECONDS = 5   # simulate N seconds (sim dt is 0.001)
     tau = np.zeros(2) # either torques or motor angles, depending on mode
 
     # peform one jump, or continuous jumping
-    SINGLE_JUMP = False
+    SINGLE_JUMP = True
 
     # sample Cartesian PD gains (can change or optimize)
     kpCartesian = np.diag([500,300])
@@ -28,34 +29,39 @@ if __name__ == "__main__":
 
     # define variables and force profile
     t = np.linspace(0,NUM_SECONDS,NUM_SECONDS*1000 + 1)
-    Fx_max = 50     # max peak force in X direction
-    Fz_max = 10     # max peak force in Z direction
-    f = 2           # frequency
+    Fx_max = 40     # max peak force in X direction
+    Fz_max = 50     # max peak force in Z direction
+    f = 1.8           # frequency
 
     if SINGLE_JUMP:
         # may want to choose different parameters
         Fx_max = 0     # max peak force in X direction
-        Fz_max = 0     # max peak force in Z direction
-        f = 0
+        Fz_max = 70     # max peak force in Z direction
+        f = 2
 
     # design Z force trajectory as a funtion of Fz_max, f, t
     #   Hint: use a sine function (but don't forget to remove positive forces)
-    force_traj_z = np.zeros(len(t))
     force_traj_z = Fz_max*np.sin(2*np.pi*f*t)
+    force_traj_z[force_traj_z > 0] = 0 ### 保证只有负值
 
     if SINGLE_JUMP:
         # remove rest of profile (just keep the first peak)
-        force_traj_z = np.zeros(len(t))
+        force_traj_z = Fz_max*np.sin(2*np.pi*f*t)
+        # 找到第一个周期的时间范围
+        one_period_duration = 1 / f
+
+        # 使用布尔索引保留第一个周期的数据
+        force_traj_z[t >= one_period_duration] = 0
 
     # design X force trajectory as a funtion of Fx_max, f, t
-    force_traj_x = np.zeros(len(t))
     force_traj_x = Fx_max*np.sin(2*np.pi*f*t)
+    force_traj_x[force_traj_x > 0] = 0
 
     ### 添加测试 (代表组末端相对于组基座的位置，0.0,-0.2 代表组末端在 x=0 z=-0.2 的位置)
     ### 注意范围 (l1=0.209,l2=0.195)
     # sample nominal foot position (can change or optimize)
     nominal_foot_pos = np.array([0.0,-0.2]) 
-    # nominal_foot_pos = np.array([-0.1,-0.2]) 
+    # nominal_foot_pos = np.array([0.0,-0.25]) 
     # nominal_foot_pos = np.array([0.195,-0.209]) 正坐着
 
     # keep track of max z height
@@ -96,16 +102,7 @@ if __name__ == "__main__":
     print('Peak z', max_base_z)
 
     # [TODO] make some plots to verify your force profile and system states
-    foot_pos_err_array = np.array(foot_value_list)
-    plt.figure(figsize=(10, 6))
-    plt.plot(foot_pos_err_array[:, 0], label='Foot Pos Error X')
-    plt.plot(foot_pos_err_array[:, 1], label='Foot Pos Error Y')
-    plt.xlabel('Time Steps')
-    plt.ylabel('Foot Position Error')
-    plt.title('Foot Position Error Over Time')
-    plt.legend()
-    plt.grid(True)
-    plt.show()
+    tools.plot(foot_value_list)
 
 
 

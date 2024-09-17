@@ -2,6 +2,7 @@
 from env.leg_gym_env import LegGymEnv
 import numpy as np
 import matplotlib.pyplot as plt
+import tools
 
 
 def jacobian_abs(q,l1=0.209,l2=0.195):
@@ -68,7 +69,7 @@ if __name__ == "__main__":
     kdCartesian = np.diag([150]*2)
 
     # test different desired foot positions
-    des_foot_pos = np.array([0.05,-0.3])  # 相对角度 theta1 = 2.86度  theta2 = -17.1度
+    des_foot_pos = np.array([0.05,-0.3]) 
 
     ### 初始化数据列表用于保存每一步的 foot_pos_err
     foot_pos_err_list = []
@@ -94,29 +95,13 @@ if __name__ == "__main__":
         tau += J.T @ np.array([0, -env.robot.total_mass*9.81]) # 重力补偿 如果设置悬空将出现问题
 
         action = tau
+
         # apply control, simulate
         env.step(action)
 
-        # 保存 foot_pos_err 的值
+        # 更新 foot_pos_err 的值
         foot_pos_err_list.append(foot_pos_err)
-
-        ### 测试使用
-        # print('desired_force',desired_force)
-        # print('foot_pos_err',foot_pos_err)
 
     # make plots of joint positions, foot positions, torques, etc.
     # [TODO]
-
-    # 将 foot_pos_err_list 转换为 numpy 数组，方便绘图
-    foot_pos_err_array = np.array(foot_pos_err_list)
-
-    # 绘制 foot_pos_err 随时间变化的图像
-    plt.figure(figsize=(10, 6))
-    plt.plot(foot_pos_err_array[:, 0], label='Foot Pos Error X')
-    plt.plot(foot_pos_err_array[:, 1], label='Foot Pos Error Y')
-    plt.xlabel('Time Steps')
-    plt.ylabel('Foot Position Error')
-    plt.title('Foot Position Error Over Time')
-    plt.legend()
-    plt.grid(True)
-    plt.show()
+    tools.plot(foot_pos_err_list)
