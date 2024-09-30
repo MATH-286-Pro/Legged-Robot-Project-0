@@ -32,3 +32,12 @@ The repository depends on recent versions of pybullet, gym, numpy, pymoo, etc. a
 ## Tips
 - If your simulation is very slow, remove the calls to time.sleep() and disable the camera resets in [leg_gym_env.py](./env/leg_gym_env.py).
 - The camera viewer can be modified in `_render_step_helper()` in [leg_gym_env.py](./env/leg_gym_env.py) to track the hopper.
+
+## Videos
+![跳跃动画](Picture/Jump_Multiple.gif)
+
+
+<!-- <video controls>
+  <source src="videos/vid-2024-09-30-22-01-32-490951/vid-2024-09-30-22-01-35-409657.MP4" type="video/mp4">
+  Your browser does not support the video tag.
+</video> -->

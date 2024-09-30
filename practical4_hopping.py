@@ -19,6 +19,7 @@ if __name__ == "__main__":
 
     # peform one jump, or continuous jumping
     SINGLE_JUMP = True
+    SINGLE_JUMP = False
 
     # sample Cartesian PD gains (can change or optimize)
     # kpCartesian = np.diag([500,300])
@@ -31,8 +32,8 @@ if __name__ == "__main__":
 
     # define variables and force profile
     t = np.linspace(0,NUM_SECONDS,NUM_SECONDS*1000 + 1)
-    Fx_max = 40     # max peak force in X direction
-    Fz_max = 50     # max peak force in Z direction
+    Fx_max = 60     # max peak force in X direction
+    Fz_max = 60     # max peak force in Z direction
     f = 1.8           # frequency
 
     if SINGLE_JUMP:
